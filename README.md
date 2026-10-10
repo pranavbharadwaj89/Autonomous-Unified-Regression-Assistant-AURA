@@ -1,4 +1,4 @@
-# CARA Automation Suite
+# Autonomous Unified Regression Assistant (AURA)
 
 QA tooling for the **cara_backend** voice assistant: text regression via `POST /api/v1/process-text`, and LiveKit voice E2E suites via the qa-runner service.
 
