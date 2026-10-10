@@ -1,0 +1,11 @@
+{
+  "pass_threshold": 80,
+  "partial_threshold": 50,
+  "report_format": "html",
+  "llm_timeout_seconds": 90,
+  "executor_env_file": ".env.executor",
+  "judge_env_file": ".env.judge",
+  "max_parallel_test_cases": 4,
+  "cara_base_url": "http://127.0.0.1:9090",
+  "cara_brand": "stellantis"
+}

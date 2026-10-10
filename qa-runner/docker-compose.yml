@@ -1,0 +1,39 @@
+# CARA QA Automation Suite — Dedicated PostgreSQL
+# ─────────────────────────────────────────────────────────────────────────────
+# Runs on port 5434 (not 5432) to avoid collision with cara_local_infra Postgres
+# which already occupies 5432 for the main cara_backend.
+#
+# Usage:
+#   docker-compose up -d          (start)
+#   docker-compose down           (stop, keep data)
+#   docker-compose down -v        (stop + wipe data)
+#
+# The schema.sql in this directory auto-runs on the FIRST start only.
+# After that, your data is preserved in the postgres_data volume.
+# ─────────────────────────────────────────────────────────────────────────────
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cara_automation_db
+    environment:
+      POSTGRES_USER:     cara_user
+      POSTGRES_PASSWORD: cara_pass
+      POSTGRES_DB:       cara_automation_db
+    ports:
+      - "5434:5432"          # 5434 externally → 5432 inside container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cara_user -d cara_automation_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: cara_automation_postgres_data

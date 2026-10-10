@@ -1,0 +1,13 @@
+{
+  "name": "cara-automation-suite",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CARA QA automation suite — frontend dashboard, qa-runner, and cara_backend integration",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:qa-runner": "python qa-runner/main.py",
+    "build": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend"
+  }
+}

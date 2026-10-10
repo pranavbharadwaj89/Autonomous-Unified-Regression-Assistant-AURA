@@ -1,0 +1,910 @@
+{
+  "schema_version": "1.0",
+  "source": "cara_backend/src/agent/session.py",
+  "intent_enums": "cara_backend/src/models/agent_tool_models.py",
+  "generated_for": "test_case_generator",
+  "tool_count": 16,
+  "constants": {
+    "MAX_PLACES_SEARCH_SELECTION_CANDIDATES": 5
+  },
+  "cross_tool_routing": [
+    {
+      "user_intent": "navigate / take me / go to / directions",
+      "correct_tool": "handle_navigation",
+      "avoid_tools": ["handle_places_search"]
+    },
+    {
+      "user_intent": "find / list / nearby / search (no navigate language)",
+      "correct_tool": "handle_places_search",
+      "avoid_tools": ["handle_navigation"]
+    },
+    {
+      "user_intent": "how far / ETA / distance (no navigate)",
+      "correct_tool": "handle_distance",
+      "avoid_tools": ["handle_navigation"]
+    },
+    {
+      "user_intent": "weather",
+      "correct_tool": "handle_weather",
+      "avoid_tools": ["handle_live_data"]
+    },
+    {
+      "user_intent": "news / sports / general facts",
+      "correct_tool": "handle_live_data",
+      "avoid_tools": ["record_refusal_reason"]
+    },
+    {
+      "user_intent": "save user profile",
+      "correct_tool": "handle_user_profile",
+      "avoid_tools": ["handle_assistant_info"]
+    },
+    {
+      "user_intent": "assistant name / read saved data / vehicle manual",
+      "correct_tool": "handle_assistant_info",
+      "avoid_tools": ["handle_user_profile"]
+    },
+    {
+      "user_intent": "call / SOS / emergency",
+      "correct_tool": "handle_calls",
+      "avoid_tools": []
+    },
+    {
+      "user_intent": "flights",
+      "correct_tool": "handle_transport",
+      "avoid_tools": ["handle_live_data"]
+    },
+    {
+      "user_intent": "vehicle status / lock-unlock",
+      "correct_tool": "handle_connected_vehicle",
+      "avoid_tools": ["handle_assistant_info"]
+    },
+    {
+      "user_intent": "jokes / trivia / games",
+      "correct_tool": "handle_infotainment",
+      "avoid_tools": ["handle_entertainment"]
+    },
+    {
+      "user_intent": "music / podcasts",
+      "correct_tool": "handle_entertainment",
+      "avoid_tools": ["handle_infotainment"]
+    },
+    {
+      "user_intent": "reminders",
+      "correct_tool": "handle_reminders",
+      "avoid_tools": []
+    },
+    {
+      "user_intent": "change reminder time",
+      "correct_tool": "handle_reminders",
+      "expected_intent": "reschedule",
+      "avoid_patterns": ["cancel_then_set"]
+    },
+    {
+      "user_intent": "policy / guardrail refusal",
+      "correct_tool": "record_refusal_reason",
+      "avoid_tools": ["handle_live_data"]
+    },
+    {
+      "user_intent": "explicit save preferred language",
+      "correct_tool": "handle_user_profile",
+      "expected_intent": "save_language_preference",
+      "fallback_tool": "handle_language_preference_from_request"
+    }
+  ],
+  "tools": [
+    {
+      "tool": "handle_session",
+      "intent_enum": "SessionIntentType",
+      "tools_module": "src.agent.tools.session_tools",
+      "common_params": ["reason"],
+      "do_not_use_for": ["navigation", "abstract_time_zones"],
+      "intents": [
+        {
+          "intent": "get_locale_time",
+          "enum_member": "GET_LOCALE_TIME",
+          "handler": "session_tools.get_locale_time_tool",
+          "required_params": [],
+          "optional_params": [],
+          "trigger_phrases": ["what time is it", "what's the date", "current time", "date today"]
+        },
+        {
+          "intent": "get_time_in_location",
+          "enum_member": "GET_TIME_IN_LOCATION",
+          "handler": "session_tools.get_time_in_location_tool",
+          "required_params": ["location"],
+          "optional_params": [],
+          "trigger_phrases": ["time in Dubai", "what time is it in"]
+        },
+        {
+          "intent": "get_user_location",
+          "enum_member": "GET_USER_LOCATION",
+          "handler": "session_tools.get_user_location_tool",
+          "required_params": [],
+          "optional_params": [],
+          "trigger_phrases": ["where am I", "my location", "where am I right now"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported session intent: {intent}"}
+    },
+    {
+      "tool": "handle_assistant_info",
+      "intent_enum": "AssistantInfoIntentType",
+      "tools_modules": ["src.agent.tools.user_profile", "src.agent.tools.user_manual"],
+      "common_params": ["reason", "participant_id"],
+      "participant_id_source": "get_participant_id_from_job()",
+      "do_not_use_for": ["saving_user_profile"],
+      "intents": [
+        {
+          "intent": "get_assistant_info",
+          "enum_member": "GET_ASSISTANT_INFO",
+          "handler": "user_profile_tools.get_assistant_info_tool",
+          "required_params": ["participant_id"],
+          "optional_params": [],
+          "trigger_phrases": ["who are you", "what is your name"]
+        },
+        {
+          "intent": "save_agent_name",
+          "enum_member": "SAVE_AGENT_NAME",
+          "handler": "user_profile_tools.set_agent_name_tool",
+          "required_params": ["participant_id", "name"],
+          "optional_params": [],
+          "trigger_phrases": ["call yourself", "your name is"]
+        },
+        {
+          "intent": "read_database_info",
+          "enum_member": "READ_DATABASE_INFO",
+          "handler": "user_profile_tools.read_database_info_tool",
+          "required_params": ["participant_id"],
+          "optional_params": ["data_type", "key"],
+          "defaults": {"data_type": "preferences"},
+          "trigger_phrases": ["what did I save", "my saved preferences"]
+        },
+        {
+          "intent": "search_manual",
+          "enum_member": "SEARCH_MANUAL",
+          "handler": "user_manual_tools.search_user_manual_tool",
+          "required_params": ["query"],
+          "optional_params": ["brand", "model"],
+          "handler_kwargs": {"limit": 5},
+          "trigger_phrases": ["how to reset tyre pressure", "vehicle manual", "warranty"]
+        },
+        {
+          "intent": "get_data_collection_scope",
+          "enum_member": "GET_DATA_COLLECTION_SCOPE",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["what data do you collect"]
+        },
+        {
+          "intent": "get_data_collection_purpose",
+          "enum_member": "GET_DATA_COLLECTION_PURPOSE",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["why do you collect data"]
+        },
+        {
+          "intent": "get_data_collection_source",
+          "enum_member": "GET_DATA_COLLECTION_SOURCE",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["how is data collected"]
+        },
+        {
+          "intent": "get_data_retention_info",
+          "enum_member": "GET_DATA_RETENTION_INFO",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["how long do you keep my data"]
+        },
+        {
+          "intent": "get_data_access_info",
+          "enum_member": "GET_DATA_ACCESS_INFO",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["who can access my data"]
+        },
+        {
+          "intent": "get_data_storage_info",
+          "enum_member": "GET_DATA_STORAGE_INFO",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["where is my data stored"]
+        },
+        {
+          "intent": "get_auto_learning_status",
+          "enum_member": "GET_AUTO_LEARNING_STATUS",
+          "handler": "user_profile_tools.get_data_transparency_info_tool",
+          "required_params": ["participant_id", "intent_value"],
+          "trigger_phrases": ["is auto preference learning enabled"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported assistant_info intent: {intent}"}
+    },
+    {
+      "tool": "handle_user_profile",
+      "intent_enum": "UserProfileIntentType",
+      "tools_module": "src.agent.tools.user_profile",
+      "common_params": ["reason", "participant_id", "user_query"],
+      "participant_id_source": "get_participant_id_from_job()",
+      "do_not_use_for": ["assistant_name", "read_saved_data"],
+      "intent_overrides": [
+        {
+          "if": "intent=delete_auto_preferences AND user_query matches learning-toggle patterns AND no delete verbs",
+          "then_handler": "user_profile_tools.set_auto_preference_learning_tool",
+          "then_kwargs": {"enabled": false}
+        }
+      ],
+      "intents": [
+        {
+          "intent": "save_user_profile_name",
+          "enum_member": "SAVE_USER_PROFILE_NAME",
+          "handler": "user_profile_tools.save_user_profile_name_tool",
+          "required_params": ["participant_id", "name"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["my name is", "call me"]
+        },
+        {
+          "intent": "enable_auto_preference_learning",
+          "enum_member": "ENABLE_AUTO_PREFERENCE_LEARNING",
+          "handler": "user_profile_tools.set_auto_preference_learning_tool",
+          "required_params": ["participant_id"],
+          "handler_kwargs": {"enabled": true},
+          "trigger_phrases": ["learn my preferences", "enable auto learning"]
+        },
+        {
+          "intent": "disable_auto_preference_learning",
+          "enum_member": "DISABLE_AUTO_PREFERENCE_LEARNING",
+          "handler": "user_profile_tools.set_auto_preference_learning_tool",
+          "required_params": ["participant_id"],
+          "handler_kwargs": {"enabled": false},
+          "trigger_phrases": ["stop learning my preferences", "disable auto learning"]
+        },
+        {
+          "intent": "delete_auto_preferences",
+          "enum_member": "DELETE_AUTO_PREFERENCES",
+          "handler": "user_profile_tools.delete_auto_preference_tool",
+          "required_params": ["participant_id"],
+          "optional_params": ["auto_preference_categories", "user_query"],
+          "trigger_phrases": ["delete my auto-saved preferences", "forget the music you learned"]
+        },
+        {
+          "intent": "save_preference",
+          "enum_member": "SAVE_PREFERENCE",
+          "handler": "user_profile_tools.save_user_preferences_tool",
+          "required_params": ["participant_id", "preference", "context"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["my favorite color is", "I like"]
+        },
+        {
+          "intent": "save_relationship",
+          "enum_member": "SAVE_RELATIONSHIP",
+          "handler": "user_profile_tools.save_user_relationships_tool",
+          "required_params": ["participant_id", "person_name", "relationship"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["John is my brother", "is my"]
+        },
+        {
+          "intent": "save_location",
+          "enum_member": "SAVE_LOCATION",
+          "handler": "user_profile_tools.save_user_location_tool",
+          "required_params": ["participant_id", "place_name", "address"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["my home is", "my office is"]
+        },
+        {
+          "intent": "save_language_preference",
+          "enum_member": "SAVE_LANGUAGE_PREFERENCE",
+          "handler": "CaraAgent._save_language_preference_and_apply",
+          "downstream": "user_profile_tools.save_user_language_preference_tool",
+          "required_params": ["participant_id", "language"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["my preferred language is", "save my language"]
+        },
+        {
+          "intent": "delete_favorite",
+          "enum_member": "DELETE_FAVORITE",
+          "handler": "user_profile_tools.delete_user_saved_data_tool",
+          "required_params": ["participant_id", "favorite_type", "item_name"],
+          "optional_params": ["user_query"],
+          "trigger_phrases": ["delete my favorite color", "remove my home location"]
+        },
+        {
+          "intent": "delete_favorites_by_type",
+          "enum_member": "DELETE_FAVORITES_BY_TYPE",
+          "handler": "user_profile_tools.delete_user_saved_scope_tool",
+          "required_params": ["participant_id", "favorite_type"],
+          "handler_kwargs": {"scope": "type"},
+          "trigger_phrases": ["delete my preferences", "delete my locations"]
+        },
+        {
+          "intent": "delete_all_user_data",
+          "enum_member": "DELETE_ALL_USER_DATA",
+          "handler": "user_profile_tools.delete_user_saved_scope_tool",
+          "required_params": ["participant_id"],
+          "handler_kwargs": {"scope": "all"},
+          "trigger_phrases": ["delete everything about me"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported user profile intent: {intent}"}
+    },
+    {
+      "tool": "handle_weather",
+      "intent_enum": "WeatherIntentType",
+      "tools_module": "src.agent.tools.weather",
+      "common_params": ["reason"],
+      "location_rule": "Pass location only when user names a place; null for here/current/local/nearby",
+      "do_not_use_for": ["live_news", "navigation", "places"],
+      "intents": [
+        {
+          "intent": "get_current_weather",
+          "enum_member": "GET_CURRENT_WEATHER",
+          "handler": "weather_tools.get_current_weather_tool",
+          "required_params": [],
+          "optional_params": ["location"],
+          "trigger_phrases": ["weather now", "current weather", "how's the weather"]
+        },
+        {
+          "intent": "get_past_weather",
+          "enum_member": "GET_PAST_WEATHER",
+          "handler": "weather_tools.get_past_weather_tool",
+          "required_params": [],
+          "optional_params": ["location", "date"],
+          "trigger_phrases": ["weather yesterday", "was it raining last week"]
+        },
+        {
+          "intent": "get_future_weather",
+          "enum_member": "GET_FUTURE_WEATHER",
+          "handler": "weather_tools.get_future_weather_tool",
+          "required_params": [],
+          "optional_params": ["location", "days"],
+          "defaults": {"days": 1},
+          "constraints": {"days": {"min": 1, "max": 8}},
+          "trigger_phrases": ["weather forecast", "weather tomorrow"]
+        },
+        {
+          "intent": "rain_forecast",
+          "enum_member": "RAIN_FORECAST",
+          "handler": "weather_tools.get_rain_forecast_tool",
+          "required_params": [],
+          "optional_params": ["location", "date"],
+          "trigger_phrases": ["will it rain", "rain probability"]
+        },
+        {
+          "intent": "uv_index",
+          "enum_member": "UV_INDEX",
+          "handler": "weather_tools.get_uv_index_tool",
+          "required_params": [],
+          "optional_params": ["location", "date"],
+          "trigger_phrases": ["UV index", "UV levels"]
+        },
+        {
+          "intent": "weather_alerts",
+          "enum_member": "WEATHER_ALERTS",
+          "handler": "weather_tools.get_weather_alerts_tool",
+          "required_params": [],
+          "optional_params": ["location"],
+          "trigger_phrases": ["weather alerts", "weather warnings"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported weather intent: {intent}"}
+    },
+    {
+      "tool": "handle_places_search",
+      "intent_enum": "PlacesSearchIntentType",
+      "tools_module": "src.agent.tools.navigation",
+      "common_params": ["reason"],
+      "do_not_use_for": ["navigation", "distance_only"],
+      "do_not_chain_with": ["handle_navigation"],
+      "side_effects": [
+        {
+          "condition": "restaurant/cafe/food request",
+          "effect": "append_auto_pref_consent_prompt",
+          "response_type": "navigation"
+        }
+      ],
+      "intents": [
+        {
+          "intent": "search_nearby_by_type",
+          "enum_member": "SEARCH_NEARBY_BY_TYPE",
+          "primary_handler": "navigation_tools.search_places_by_type_tool",
+          "required_params": ["included_type"],
+          "optional_params": ["location", "max_results", "expand_radius"],
+          "max_results_rule": "1 for nearest/closest; else MAX_PLACES_SEARCH_SELECTION_CANDIDATES (5)",
+          "branches": [
+            {
+              "condition": "reason contains on the way / en route / on route",
+              "handler": "navigation_tools.find_on_route_places_tool",
+              "note": "recovery when LLM mis-routed to places_search instead of navigation.on_route_places",
+              "required_params": ["destination_guess_from_reason", "query"],
+              "missing_destination_response": {
+                "type": "navigation",
+                "assistant": {"message": "For 'on the way' requests, please provide destination and query so I can search along the route."}
+              }
+            },
+            {
+              "condition": "included_type or query contains veg/vegetarian",
+              "handler": "navigation_tools.search_places_by_text_tool"
+            },
+            {
+              "condition": "showroom/dealer/dealership in type AND brand-like query",
+              "handler": "navigation_tools.search_places_by_text_tool"
+            },
+            {
+              "condition": "default",
+              "handler": "navigation_tools.search_places_by_type_tool"
+            }
+          ],
+          "missing_included_type_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify included_type for search_nearby_by_type (e.g. hospital, gas_station, subway_station)."}
+          },
+          "trigger_phrases": ["find hospitals", "ATMs nearby", "nearby airports"]
+        },
+        {
+          "intent": "search_by_text",
+          "enum_member": "SEARCH_BY_TEXT",
+          "primary_handler": "navigation_tools.search_places_by_text_tool",
+          "required_params": ["query"],
+          "optional_params": ["location", "max_results"],
+          "branches": [
+            {
+              "condition": "query resolves to category via resolve_search_nearby_included_type AND NOT (showroom/dealer with brand)",
+              "handler": "navigation_tools.search_places_by_type_tool"
+            },
+            {
+              "condition": "default",
+              "handler": "navigation_tools.search_places_by_text_tool"
+            }
+          ],
+          "missing_query_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify query for search_by_text (e.g. Jeep showrooms, car dealership, OEM service center)."}
+          },
+          "trigger_phrases": ["Jeep showrooms", "OEM service center"]
+        }
+      ],
+      "unsupported_intent_response": {
+        "type": "navigation",
+        "assistant": {"message": "Unsupported places search intent: {intent}"}
+      }
+    },
+    {
+      "tool": "handle_distance",
+      "intent_enum": "DistanceIntentType",
+      "tools_module": "src.agent.tools.navigation",
+      "common_params": ["reason"],
+      "do_not_use_for": ["navigation", "places_search"],
+      "intents": [
+        {
+          "intent": "get_distance",
+          "enum_member": "GET_DISTANCE",
+          "handler": "navigation_tools.get_distance_tool",
+          "required_params": ["destination"],
+          "optional_params": ["origin", "mode"],
+          "defaults": {"mode": "driving"},
+          "mode_values": ["driving", "walking", "bicycling", "transit"],
+          "missing_destination_response": {
+            "type": "distance",
+            "assistant": {"message": "Please specify a destination to calculate the distance to."}
+          },
+          "trigger_phrases": ["how far is", "ETA to", "distance to", "how long to reach"]
+        }
+      ],
+      "unsupported_intent_response": {
+        "type": "distance",
+        "assistant": {"message": "Unsupported distance intent: {intent}"}
+      }
+    },
+    {
+      "tool": "handle_navigation",
+      "intent_enum": "NavigationIntentType",
+      "tools_module": "src.agent.tools.navigation",
+      "common_params": ["reason"],
+      "do_not_use_for": ["places_search_only", "distance_only"],
+      "do_not_chain_with": ["handle_places_search"],
+      "intent_overrides": [
+        {
+          "if": "intent=direct AND (origin is set OR stops is non-empty)",
+          "then_intent": "intermediary"
+        },
+        {
+          "if": "intent=on_route_places AND destination resolves to category AND reason is NOT on-route corridor request",
+          "then_intent": "direct",
+          "then_destination": "category_destination"
+        }
+      ],
+      "intents": [
+        {
+          "intent": "direct",
+          "enum_member": "DIRECT",
+          "handler": "navigation_tools.navigate_direct_tool",
+          "pre_handlers": [
+            "navigation_tools.try_resume_direct_navigation_after_clarification",
+            "navigation_tools.try_resume_route_navigation_after_clarification"
+          ],
+          "required_params": ["destination"],
+          "optional_params": ["origin"],
+          "destination_resolution": "resolve_search_nearby_included_type(raw_destination) or raw_destination",
+          "missing_destination_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify where you want to go."}
+          },
+          "trigger_phrases": ["navigate to", "take me to", "go to", "directions to", "drive me to"]
+        },
+        {
+          "intent": "intermediary",
+          "enum_member": "INTERMEDIARY",
+          "handler": "navigation_tools.navigate_route_with_stops_tool",
+          "pre_handlers": ["navigation_tools.try_resume_route_navigation_after_clarification"],
+          "required_params": ["destination"],
+          "optional_params": ["origin", "stops"],
+          "stops_normalization": "string or list[str] -> list[str]",
+          "missing_destination_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify a destination to navigate to."}
+          },
+          "trigger_phrases": ["via", "with a stop at", "through"]
+        },
+        {
+          "intent": "transit_directions",
+          "enum_member": "TRANSIT_DIRECTIONS",
+          "handler": "navigation_tools.get_transit_directions_tool",
+          "required_params": ["destination"],
+          "optional_params": ["origin", "mode"],
+          "mode_values": ["subway", "bus", "train"],
+          "destination_from": "destination or query",
+          "missing_destination_response": {
+            "type": "transit_directions",
+            "assistant": {"message": "Please specify where you want to go by public transport."}
+          },
+          "trigger_phrases": ["subway to", "bus to", "train to", "public transport"]
+        },
+        {
+          "intent": "on_route_places",
+          "enum_member": "ON_ROUTE_PLACES",
+          "handler": "navigation_tools.find_on_route_places_tool",
+          "required_params": ["destination", "query"],
+          "optional_params": ["origin", "max_results", "max_detour_km", "prefer_ahead", "near_mode"],
+          "near_mode_values": ["on_route", "near_origin", "near_destination"],
+          "defaults": {"max_results": 3},
+          "constraints": {"max_results": {"max": 8}},
+          "missing_destination_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify your destination for on-route discovery."}
+          },
+          "missing_query_response": {
+            "type": "navigation",
+            "assistant": {"message": "Please specify what you want to find on the way (for example, hospitals, waterfalls, or supermarkets)."}
+          },
+          "trigger_phrases": ["on the way to", "along the route to", "find hospitals on the way"]
+        }
+      ],
+      "unsupported_intent_response": {
+        "type": "navigation",
+        "assistant": {"message": "Unsupported navigation intent: {intent}"}
+      }
+    },
+    {
+      "tool": "handle_calls",
+      "intent_enum": "CallIntentType",
+      "tools_module": "src.agent.tools.calls",
+      "common_params": ["reason"],
+      "do_not_use_for": ["call_logs", "missed_calls"],
+      "note": "SosIntentType exists in models but SOS is handled here via call_type=emergency",
+      "intents": [
+        {
+          "intent": "start_call",
+          "enum_member": "START_CALL",
+          "branches": [
+            {
+              "condition": "call_type=emergency",
+              "handler": "calls_tools.start_sos_tool",
+              "required_params": ["user_input"],
+              "optional_params": ["sos_type", "region"],
+              "sos_type_values": ["police", "fire", "ambulance", "rsa", "general"],
+              "defaults": {"sos_type": "general"},
+              "trigger_phrases": ["call police", "SOS", "roadside assistance", "ambulance"]
+            },
+            {
+              "condition": "call_type=normal (default)",
+              "handler": "calls_tools.get_calls_tool",
+              "required_params": [],
+              "optional_params": ["contact_name", "phone_number"],
+              "disambiguation": "re-call with exact contact_name after user chooses",
+              "trigger_phrases": ["call John", "dial", "phone"]
+            }
+          ]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported call intent: {intent}"}
+    },
+    {
+      "tool": "handle_transport",
+      "intent_enum": "TransportIntentType",
+      "tools_module": "src.agent.tools.flights",
+      "common_params": ["reason"],
+      "do_not_use_for": ["trains", "buses", "general_travel"],
+      "intents": [
+        {
+          "intent": "track_flight_status",
+          "enum_member": "TRACK_FLIGHT_STATUS",
+          "handler": "flights_tools.track_flight_status_tool",
+          "required_params": [],
+          "optional_params": ["query", "flight_number", "date_text"],
+          "trigger_phrases": ["flight status", "is flight 6E598 on time", "AI513"]
+        },
+        {
+          "intent": "search_flights_by_query",
+          "enum_member": "SEARCH_FLIGHTS_BY_QUERY",
+          "handler": "flights_tools.search_flights_by_query_tool",
+          "required_params": [],
+          "optional_params": ["query", "origin_iata", "destination_iata", "date_text"],
+          "iata_examples": {"Chennai": "MAA", "Delhi": "DEL", "Mumbai": "BOM", "Bangalore": "BLR", "Coimbatore": "CJB", "Hyderabad": "HYD", "Kolkata": "CCU"},
+          "trigger_phrases": ["flights from Chennai to Delhi", "flights tomorrow"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported transport intent: {intent}"}
+    },
+    {
+      "tool": "handle_connected_vehicle",
+      "intent_enum": "ConnectedVehicleIntentType",
+      "tools_module": "src.agent.tools.connected_vehicle",
+      "common_params": ["reason"],
+      "do_not_use_for": ["vehicle_manual", "live_traffic"],
+      "intents": [
+        {
+          "intent": "get_vehicle_status",
+          "enum_member": "GET_VEHICLE_STATUS",
+          "handler": "connected_vehicle_tools.get_vehicle_status_tool",
+          "required_params": [],
+          "optional_params": ["vin", "aspect", "force_refresh"],
+          "aspect_values": ["stable", "realtime"],
+          "aspect_notes": {"stable": "cached slow-changing (odometer, tyre pressure)", "realtime": "lock/AC/fuel"},
+          "trigger_phrases": ["fuel level", "tyre pressure", "is the car locked", "odometer"]
+        },
+        {
+          "intent": "execute_vehicle_command",
+          "enum_member": "EXECUTE_VEHICLE_COMMAND",
+          "handler": "connected_vehicle_tools.execute_vehicle_command_tool",
+          "required_params": ["command"],
+          "optional_params": ["pin", "vin"],
+          "trigger_phrases": ["unlock the doors", "flash lights", "lock the car"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported connected vehicle intent: {intent}"}
+    },
+    {
+      "tool": "handle_live_data",
+      "intent_enum": "LiveDataIntentType",
+      "tools_module": "src.agent.tools.live_data",
+      "common_params": ["reason"],
+      "role": "default_catch_all",
+      "do_not_use_when": ["dedicated_tool_clearly_applies"],
+      "intents": [
+        {
+          "intent": "get_live_data",
+          "enum_member": "GET_LIVE_DATA",
+          "handler": "live_data_tools.get_live_data_tool",
+          "required_params": ["query"],
+          "trigger_phrases": ["what is", "who is", "latest news", "cricket score", "stock price", "traffic"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported live data intent: {intent}"}
+    },
+    {
+      "tool": "handle_language_preference_from_request",
+      "intent_enum": null,
+      "role": "fallback_language_save",
+      "prefer_tool": "handle_user_profile",
+      "prefer_intent": "save_language_preference",
+      "common_params": ["reason", "user_request"],
+      "handler": "CaraAgent._save_language_preference_and_apply",
+      "downstream": "user_profile_tools.save_user_language_preference_tool",
+      "required_params": ["user_request"],
+      "optional_params": ["language"],
+      "error_responses": [
+        {"condition": "no participant_id", "response": {"status": "error", "message": "No user in room."}},
+        {"condition": "language not parseable", "response": {"status": "error", "error_code": "preferred_language_parse_failed"}}
+      ],
+      "trigger_phrases": ["save my preferred language", "set my language to Telugu"]
+    },
+    {
+      "tool": "record_refusal_reason",
+      "intent_enum": null,
+      "role": "guardrail_logging_only",
+      "common_params": ["reason", "refusal_reason", "user_request"],
+      "handler": "logger.info (no business service)",
+      "returns": "Recorded.",
+      "do_not_use_for": ["factual_questions", "unclear_tool_match", "fulfillable_requests", "language_conversation_only"],
+      "trigger_phrases": ["harmful request", "competitor comparison after redirect"]
+    },
+    {
+      "tool": "handle_infotainment",
+      "intent_enum": "InfotainmentIntentType",
+      "tools_module": "src.agent.tools.infotainment",
+      "common_params": ["reason"],
+      "do_not_use_for": ["music", "podcasts", "live_news"],
+      "intents": [
+        {
+          "intent": "tell_joke",
+          "enum_member": "TELL_JOKE",
+          "handler": "infotainment_tools.tell_joke_tool",
+          "required_params": [],
+          "trigger_phrases": ["tell me a joke", "something funny"]
+        },
+        {
+          "intent": "get_trivia",
+          "enum_member": "GET_TRIVIA",
+          "handler": "infotainment_tools.get_trivia_tool",
+          "required_params": [],
+          "trigger_phrases": ["trivia", "fun fact", "something interesting"]
+        },
+        {
+          "intent": "play_game",
+          "enum_member": "PLAY_GAME",
+          "handler": "infotainment_tools.play_game_tool",
+          "required_params": ["participant_id"],
+          "optional_params": ["user_input", "difficulty"],
+          "defaults": {"user_input": "Let's play."},
+          "difficulty_values": ["easy", "medium", "hard"],
+          "trigger_phrases": ["let's play a game", "number guessing", "hangman"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported infotainment intent: {intent}"}
+    },
+    {
+      "tool": "handle_entertainment",
+      "intent_enum": "EntertainmentIntentType",
+      "tools_module": "src.agent.tools.entertainment",
+      "common_params": ["reason"],
+      "do_not_use_for": ["jokes", "trivia"],
+      "side_effects": [
+        {
+          "condition": "intent=music",
+          "effect": "append_auto_pref_consent_prompt",
+          "response_type": "music"
+        }
+      ],
+      "intents": [
+        {
+          "intent": "music",
+          "enum_member": "MUSIC",
+          "branches": [
+            {
+              "condition": "no song, artist, or query",
+              "handler": "entertainment_tools.handle_play_favorite_song_tool",
+              "optional_params": ["provider"],
+              "trigger_phrases": ["play my favorite song", "play my usual song"]
+            },
+            {
+              "condition": "song or artist or query provided",
+              "handler": "entertainment_tools.handle_music_tool",
+              "optional_params": ["song", "artist", "query", "provider"]
+            }
+          ],
+          "provider_values": ["spotify", "youtube"],
+          "provider_rule": "only when user explicitly says Spotify/YouTube/YT",
+          "trigger_phrases": ["play music", "play Bohemian Rhapsody", "search for songs"]
+        },
+        {
+          "intent": "suggest_podcast",
+          "enum_member": "SUGGEST_PODCAST",
+          "handler": "entertainment_tools.handle_suggest_podcast_tool",
+          "required_params": [],
+          "optional_params": ["query"],
+          "trigger_phrases": ["suggest a podcast", "podcasts about"]
+        },
+        {
+          "intent": "play_podcast",
+          "enum_member": "PLAY_PODCAST",
+          "handler": "entertainment_tools.handle_play_podcast_tool",
+          "required_params": ["podcast_name"],
+          "optional_params": ["podcast_number", "episode_number", "episode_name"],
+          "trigger_phrases": ["play podcast", "play episode"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported entertainment intent: {intent}"}
+    },
+    {
+      "tool": "handle_reminders",
+      "intent_enum": "RemindersIntentType",
+      "tools_module": "src.agent.tools.reminders",
+      "common_params": ["reason"],
+      "critical_rules": [
+        "NEVER decompose reschedule into CANCEL + SET",
+        "CANCEL is permanent deletion only",
+        "time_explicitly_provided must be true before SET or SET_RECURRING creates a reminder"
+      ],
+      "intents": [
+        {
+          "intent": "set",
+          "enum_member": "SET",
+          "handler": "reminders_tools.time_based_reminder_agent_tool",
+          "required_params": ["task", "time_explicitly_provided"],
+          "conditional_required": ["trigger_time OR delay_in_minutes when time_explicitly_provided=true"],
+          "constraints": {"is_recurring": false},
+          "optional_params": ["trigger_time", "delay_in_minutes", "client_offset", "weekdays", "weekday_labels", "priority"],
+          "validation_errors": [
+            {"condition": "is_recurring=true", "message": "Please set is_recurring=false for a one-time reminder."},
+            {"condition": "time_explicitly_provided is not true", "error_code": "MISSING_TIME", "message": "What time?", "needs_clarification": true},
+            {"condition": "no trigger_time and no delay_in_minutes", "error_code": "MISSING_TIME", "message": "What time?", "needs_clarification": true},
+            {"condition": "no task", "message": "Task description is required to set a reminder."}
+          ],
+          "trigger_phrases": ["remind me at 3pm", "remind me in 10 minutes"]
+        },
+        {
+          "intent": "set_recurring",
+          "enum_member": "SET_RECURRING",
+          "handler": "reminders_tools.recurring_reminder_agent_tool",
+          "required_params": ["task", "time_explicitly_provided"],
+          "conditional_required": ["trigger_time OR delay_in_minutes when time_explicitly_provided=true"],
+          "constraints": {"is_recurring": true},
+          "optional_params": ["trigger_time", "delay_in_minutes", "client_offset", "frequency", "interval", "max_iterations", "weekdays", "weekday_labels", "priority"],
+          "frequency_values": ["minutely", "hourly", "daily", "monthly", "yearly", "weekdays"],
+          "frequency_forbidden": ["weekly"],
+          "defaults": {"frequency": "daily", "interval": 1},
+          "weekdays_format": "0=Mon .. 6=Sun",
+          "validation_errors": [
+            {"condition": "is_recurring=false", "message": "Please set is_recurring=true for a recurring reminder."},
+            {"condition": "time_explicitly_provided is not true", "error_code": "MISSING_TIME", "message": "What time?", "needs_clarification": true},
+            {"condition": "no task", "message": "Task description is required to set a recurring reminder."}
+          ],
+          "trigger_phrases": ["remind me every day", "daily reminder"]
+        },
+        {
+          "intent": "set_location",
+          "enum_member": "SET_LOCATION",
+          "handler": "reminders_tools.create_location_reminder_agent_tool",
+          "required_params": ["task", "place"],
+          "optional_params": ["radius_meters", "priority"],
+          "defaults": {"radius_meters": 500},
+          "validation_errors": [
+            {"condition": "no task or no place", "message": "Task and place are required for a location reminder (e.g. 'remind me to X when I reach home')."}
+          ],
+          "trigger_phrases": ["remind me when I reach home", "remind me at the office"]
+        },
+        {
+          "intent": "list",
+          "enum_member": "LIST",
+          "handler": "reminders_tools.list_reminders_agent_tool",
+          "required_params": [],
+          "trigger_phrases": ["list my reminders", "what reminders do I have"]
+        },
+        {
+          "intent": "cancel",
+          "enum_member": "CANCEL",
+          "handler": "reminders_tools.cancel_reminder_agent_tool",
+          "required_params": [],
+          "optional_params": ["task", "trigger_time_hint", "trigger_time", "uuid", "choice_index"],
+          "disambiguation": "re-call with choice_index after user picks from list",
+          "trigger_phrases": ["cancel my reminder", "delete the reminder"]
+        },
+        {
+          "intent": "reschedule",
+          "enum_member": "RESCHEDULE",
+          "handler": "reminders_tools.reschedule_reminder_agent_tool",
+          "required_params": [],
+          "optional_params": ["task", "trigger_time_hint", "uuid", "choice_index", "trigger_time", "delay_in_minutes", "client_offset", "frequency", "interval", "max_iterations", "weekdays", "weekday_labels", "is_recurring"],
+          "trigger_phrases": ["reschedule", "postpone", "prepone", "move it to", "change it to"]
+        }
+      ],
+      "unsupported_intent_response": {"error": "Unsupported reminders intent: {intent}"}
+    }
+  ],
+  "existing_e2e_fixtures": {
+    "tool_scripts": "cara_backend/tests/e2e_voice/scripts/tool_*.yaml",
+    "conversation_scripts": "cara_backend/tests/e2e_voice/scripts/conversations/conversation_*.yaml"
+  },
+  "test_dimensions": [
+    "happy_path_per_intent",
+    "missing_required_param",
+    "intent_override",
+    "wrong_tool_negative",
+    "disambiguation_loop",
+    "validation_gate",
+    "branch_routing",
+    "emergency_branch",
+    "consent_side_effect",
+    "unsupported_intent"
+  ]
+}

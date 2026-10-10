@@ -1,0 +1,194 @@
+# =============================================================
+#  AURA Automation Platform — Root .gitignore
+#  Covers: backend-feature-demo-develop | frontend | qa-runner
+# =============================================================
+
+# ---------------------------------------------------------------
+# Environment / Secrets  (NEVER commit real env files)
+# ---------------------------------------------------------------
+.env
+.env.local
+.env.executor
+.env.judge
+.env.model1
+.env.model2
+.env.*.local
+*.env
+# Keep example files so devs know what to configure
+!.env.example
+
+# ---------------------------------------------------------------
+# Python  (backend-feature-demo-develop / qa-runner)
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Virtual environments (any name pattern)
+.venv/
+.venv*/
+venv/
+venv*/
+env/
+ENV/
+caienv/
+live-kit-agent/
+https-env/
+cara/
+env.bak/
+venv.bak/
+__pypackages__/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.pytest_cache/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+cover/
+
+# Type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# Misc Python tooling
+.pdm.toml
+.pybuilder/
+.spyderproject
+.spyproject
+.ropeproject
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+pip-log.txt
+pip-delete-this-directory.txt
+*.sage.py
+*.mo
+*.pot
+celerybeat-schedule
+celerybeat.pid
+
+# ---------------------------------------------------------------
+# Node / JavaScript / TypeScript  (frontend / backend web)
+# ---------------------------------------------------------------
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
+.next/
+.nuxt/
+.output/
+
+# Cache
+.vite/
+.vite-temp/
+.turbo/
+.parcel-cache/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Lock files (keep package-lock.json / pnpm-lock.yaml, ignore yarn.lock if not used)
+# Uncomment the one you don't use:
+# yarn.lock
+
+# ---------------------------------------------------------------
+# QA Runner specific
+# ---------------------------------------------------------------
+runs/
+tests/__pycache__/
+
+# ---------------------------------------------------------------
+# Vector databases (ChromaDB — generated locally, do not commit)
+# ---------------------------------------------------------------
+**/jeep_meridian_vecdb/
+**/vehicle_vecdb/
+**/*_vecdb/
+chroma.sqlite3
+
+# ---------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------
+# Keep docker-compose files, only ignore generated secrets / overrides
+docker-compose.override.yml
+.docker/
+
+# ---------------------------------------------------------------
+# IDE / Editor
+# ---------------------------------------------------------------
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+
+# ---------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------
+.DS_Store
+.DS_store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------------------------------------------------------------
+# Miscellaneous
+# ---------------------------------------------------------------
+*.manifest
+*.spec
+*.local
+*.orig
+*.bak
+*.tmp
+
+# Local assistant settings
+.claude/
