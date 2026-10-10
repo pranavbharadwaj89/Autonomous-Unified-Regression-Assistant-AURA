@@ -8,9 +8,33 @@ QA tooling for the **cara_backend** voice assistant: text regression via `POST /
 |------|------|
 | `frontend/` | React dashboard (Vite) — text regression, single-prompt testing, reports |
 | `qa-runner/` | FastAPI service — orchestrates cara_backend voice E2E test suites |
+| `docs/` | VECTORA architecture notes and working guide |
 | `backend-feature-demo-develop/cara_backend/` | CARA backend (FastAPI on port **9090** + LiveKit agent worker) — **private, not included in this repository** |
 
 > **Note:** The CARA backend lives in a separate private repository. To run the full stack, place it at `backend-feature-demo-develop/cara_backend` or point `CARA_BACKEND_PATH` at your own copy. The frontend and qa-runner in this repo are published on their own.
+
+## Repository structure
+
+```text
+.
+├── frontend/            React + Vite dashboard
+│   ├── src/
+│   │   ├── components/  Panels (Prism, VECTORA, Voice E2E, Judge, PRD generator)
+│   │   ├── api/         Clients for cara_backend and qa-runner
+│   │   ├── config/      Backend, qa-runner and pipeline settings
+│   │   └── utils/       Evaluation and report helpers
+│   └── scripts/         Evaluator sample checks
+├── qa-runner/           FastAPI service, judge/scoring modules, DB schema, tests
+├── docs/                VECTORA architecture changes and working guide
+├── .env.example         Suite-level environment template
+└── package.json         Root scripts (dev, dev:qa-runner, build, preview)
+```
+
+## Documentation
+
+- [VECTORA architecture changes](docs/VECTORA_ARCHITECTURE_CHANGES.md)
+- [VECTORA working guide](docs/VECTORA_WORKING_GUIDE.md)
+- [QA runner details](qa-runner/README.md)
 
 ## Prerequisites
 
